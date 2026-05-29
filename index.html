@@ -25,7 +25,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VibeStars">
 <title>VibeStars Pro – הבמה הבינלאומית</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://translate.google.com https://translate.googleapis.com https://www.youtube-nocookie.com https://player.vimeo.com https://w.soundcloud.com https://formspree.io; script-src 'self' 'unsafe-inline' https://translate.google.com https://translate.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://w.soundcloud.com https://www.tiktok.com; connect-src 'self' https://formspree.io;">
 
 <!-- WCAG 2.1 / Accessibility -->
 <meta name="theme-color" content="#060608">
@@ -146,6 +145,10 @@
   --shadow-gold:0 0 40px rgba(201,168,76,0.12);
   --admin-red:rgba(220,38,38,1);--admin-red-bg:rgba(220,38,38,0.12);--admin-red-border:rgba(220,38,38,0.45);
   --shadow-card:0 8px 32px rgba(0,0,0,0.45);
+  --font-serif:'Cormorant Garamond','Playfair Display',serif;
+  --font-body:'DM Sans','Segoe UI',sans-serif;
+  --transition:.25s cubic-bezier(.4,0,.2,1);
+}
 
 /* ── Netlify Identity button ── */
 .btn-netlify-login {
@@ -234,10 +237,6 @@
   margin-right: 4px;
 }
 .netlify-id-status.admin { background: var(--admin-red-bg); border-color: var(--admin-red-border); color: var(--admin-red); }
-  --font-serif:'Cormorant Garamond','Playfair Display',serif;
-  --font-body:'DM Sans','Segoe UI',sans-serif;
-  --transition:.25s cubic-bezier(.4,0,.2,1);
-}
 @media(max-width:640px){.bilingual-grid{grid-template-columns:1fr!important;}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -5403,12 +5402,34 @@ function revealAdminButton() {
 // ── Open / close modal ──
 function openAdminLoginModal() {
   if (_isAdmin) {
-    if (confirm('אתה מחובר כמנהל.\nלהתנתק?')) { adminLogout(); }
+    showAdminLogoutConfirm();
     return;
   }
   adminBackToStep1();
   document.getElementById('admin-modal-overlay').style.display = 'flex';
   setTimeout(function(){ document.getElementById('admin-email-input').focus(); }, 150);
+}
+
+function showAdminLogoutConfirm() {
+  var existing = document.getElementById('admin-logout-confirm');
+  if (existing) { existing.style.display = 'flex'; return; }
+  var el = document.createElement('div');
+  el.id = 'admin-logout-confirm';
+  el.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease;';
+  el.innerHTML =
+    '<div style="background:var(--bg3);border:1.5px solid var(--admin-red-border);border-radius:18px;padding:32px 28px;max-width:360px;width:92vw;text-align:center;box-shadow:0 8px 50px rgba(220,38,38,0.25);">' +
+      '<div style="font-size:2.2em;margin-bottom:10px;">🛡️</div>' +
+      '<div style="font-family:var(--font-serif);font-size:1.2em;color:var(--admin-red);font-weight:700;margin-bottom:8px;">יציאת מנהל</div>' +
+      '<p style="color:var(--text-muted);font-size:.88em;margin-bottom:24px;line-height:1.6;">האם לצאת ממצב ניהול?</p>' +
+      '<div style="display:flex;gap:10px;justify-content:center;">' +
+        '<button onclick="document.getElementById(\'admin-logout-confirm\').remove();adminLogout();" ' +
+          'style="flex:1;max-width:140px;padding:11px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;border-radius:10px;font-size:.92em;font-weight:700;cursor:pointer;font-family:inherit;">יציאה ✓</button>' +
+        '<button onclick="document.getElementById(\'admin-logout-confirm\').remove();" ' +
+          'style="flex:1;max-width:140px;padding:11px;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid rgba(255,255,255,0.12);border-radius:10px;font-size:.92em;cursor:pointer;font-family:inherit;">ביטול</button>' +
+      '</div>' +
+    '</div>';
+  el.addEventListener('click', function(e) { if (e.target === el) el.remove(); });
+  document.body.appendChild(el);
 }
 
 function closeAdminLoginModal() {
@@ -5716,11 +5737,13 @@ function adminRegResendOtp() {
 
 // ── Logout ──
 function adminLogout() {
+  _isAdmin = false;
   setAdminSession(false);
   syncAdminUI();
   toast && toast('🔑 התנתקת מהמנהל', 'success');
   var btn = document.getElementById('admin-secret-btn');
   if (btn) btn.style.display = 'none';
+  showView('home');
 }
 
 // ── Admin actions ──
